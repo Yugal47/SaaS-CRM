@@ -1,0 +1,158 @@
+version: "3.8"
+
+x-jwt-secret: &jwt-secret local-dev-secret-change-me-please-32chars-minimum
+
+services:
+
+  # ---- One Postgres instance, one database per service ----
+  # Each service still only ever talks to its own database (see DB_URL below) -
+  # this just avoids running 5 separate Postgres containers for local dev.
+  # In AWS this can stay one RDS instance with 5 databases, or be split into
+  # separate RDS instances later without any app code changes.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: crm_pass
+      POSTGRES_DB: userdb
+      POSTGRES_MULTIPLE_DATABASES: crmdb,notificationdb,filedb,auditdb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres-init/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_user"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---- Backend microservices ----
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/userdb
+      DB_USERNAME: crm_user
+      DB_PASSWORD: crm_pass
+      JWT_SECRET: *jwt-secret
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  crm-service:
+    build:
+      context: .
+      dockerfile: crm-service/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/crmdb
+      DB_USERNAME: crm_user
+      DB_PASSWORD: crm_pass
+      JWT_SECRET: *jwt-secret
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/notificationdb
+      DB_USERNAME: crm_user
+      DB_PASSWORD: crm_pass
+      JWT_SECRET: *jwt-secret
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  file-service:
+    build:
+      context: .
+      dockerfile: file-service/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/filedb
+      DB_USERNAME: crm_user
+      DB_PASSWORD: crm_pass
+      JWT_SECRET: *jwt-secret
+      FILE_STORAGE_PATH: /data/files
+    volumes:
+      - file_uploads:/data/files
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: audit-service/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_URL: jdbc:postgresql://postgres:5432/auditdb
+      DB_USERNAME: crm_user
+      DB_PASSWORD: crm_pass
+      JWT_SECRET: *jwt-secret
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  reporting-service:
+    build:
+      context: .
+      dockerfile: reporting-service/Dockerfile
+    environment:
+      JWT_SECRET: *jwt-secret
+      CRM_SERVICE_URL: http://crm-service:8082
+    ports:
+      - "8086:8086"
+    depends_on:
+      - crm-service
+
+  # ---- Gateway: single entry point the frontend talks to ----
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    environment:
+      USER_SERVICE_URL: http://user-service:8081
+      CRM_SERVICE_URL: http://crm-service:8082
+      NOTIFICATION_SERVICE_URL: http://notification-service:8083
+      FILE_SERVICE_URL: http://file-service:8084
+      AUDIT_SERVICE_URL: http://audit-service:8085
+      REPORTING_SERVICE_URL: http://reporting-service:8086
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - crm-service
+      - notification-service
+      - file-service
+      - audit-service
+      - reporting-service
+
+  # ---- Frontend ----
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway-service
+
+volumes:
+  pg_data:
+  file_uploads:
