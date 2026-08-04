@@ -1,0 +1,44 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: file-service
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  datasource:
+    url: jdbc:h2:mem:filedb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  secret: ${JWT_SECRET:change-this-to-a-long-random-secret-before-deploying-anywhere}
+
+# local disk stub for S3 - swap for an S3 client + bucket name when deploying to AWS
+file:
+  storage-path: ${FILE_STORAGE_PATH:/tmp/crm-files}
+
+logging:
+  level:
+    com.crm: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/filedb}
+    username: ${DB_USERNAME:crm_user}
+    password: ${DB_PASSWORD:crm_pass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
