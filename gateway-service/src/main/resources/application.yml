@@ -1,0 +1,62 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: user-service-auth
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+
+        - id: crm-service-customers
+          uri: ${CRM_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/customers/**
+
+        - id: crm-service-leads
+          uri: ${CRM_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/leads/**
+
+        - id: crm-service-deals
+          uri: ${CRM_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/deals/**
+
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/notifications/**
+
+        - id: file-service
+          uri: ${FILE_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/files/**
+
+        - id: audit-service
+          uri: ${AUDIT_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/audit/**
+
+        - id: reporting-service
+          uri: ${REPORTING_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/reports/**
+
+      httpclient:
+        connect-timeout: 3000
+        response-timeout: 10s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
