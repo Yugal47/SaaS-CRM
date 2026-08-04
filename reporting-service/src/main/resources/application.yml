@@ -1,0 +1,16 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: reporting-service
+
+jwt:
+  secret: ${JWT_SECRET:change-this-to-a-long-random-secret-before-deploying-anywhere}
+
+crm-service:
+  base-url: ${CRM_SERVICE_URL:http://localhost:8082}
+
+logging:
+  level:
+    com.crm: INFO
