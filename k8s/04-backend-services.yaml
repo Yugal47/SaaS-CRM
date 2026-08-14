@@ -31,22 +31,24 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-        startupProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8081
-          periodSeconds: 5
-          failureThreshold: 12
+#        startupProbe:
+#          httpGet:
+#            path: /actuator/health
+#            port: 8081
+#          periodSeconds: 5
+#          failureThreshold: 12
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
-          periodSeconds: 5
+          initialDelaySeconds: 20
+          periodSeconds: 10
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
-          periodSeconds: 10
+          initialDelaySeconds: 40
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
