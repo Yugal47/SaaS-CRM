@@ -7,7 +7,7 @@ data:
   SPRING_PROFILES_ACTIVE: 'postgres'
 
   USER_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/userdb'
-  CRM_SERVICE_DB_URL: 'jdbc:postgres://postgres-services:5432/crmddb'
+  CRM_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/crmddb'
   NOTIFICATION_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/notificationdb'
   AUDIT_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/auditdb'
   FILE_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/filedb'
