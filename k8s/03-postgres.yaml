@@ -81,14 +81,24 @@ spec:
               mountPath: /docker-entrypoint-initdb.d
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
             initialDelaySeconds: 5
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
-            initialDelaySeconds: 15
-            periodSeconds: 10
+              command:
+                - sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
       volumes:
         - name: init-script
           configMap:
