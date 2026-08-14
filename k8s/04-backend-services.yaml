@@ -31,24 +31,27 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-#        startupProbe:
-#          httpGet:
-#            path: /actuator/health
-#            port: 8081
-#          periodSeconds: 5
-#          failureThreshold: 12
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8081
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service
@@ -88,7 +91,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: config
-              key: CRM_SERVICE_DB_URL
+              key: DB_URL
         resources:
           requests:
             cpu: 100m
@@ -97,18 +100,27 @@ spec:
             cpu: 500m
             memory: 512Mi
 
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8082
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8082
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service
@@ -155,19 +167,27 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8085
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8085
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8085
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service
@@ -214,19 +234,27 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8083
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8083
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service
@@ -284,19 +312,27 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8084
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8084
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8084
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         volumeMounts:
           - name: file-storage
             mountPath: /data/files
@@ -337,6 +373,11 @@ spec:
         image: yugal47/saas-crm-gateway-service:latest
         ports:
           - containerPort: 8080
+        envFrom:
+          - configMapRef:
+              name: config
+          - secretRef:
+              name: secret
         resources:
           requests:
             cpu: 100m
@@ -344,19 +385,27 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8080
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8080
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service
@@ -390,12 +439,6 @@ spec:
         image: yugal47/saas-crm-reporting-service:latest
         ports:
           - containerPort: 8086
-        env:
-        - name: DB_URL
-          valueFrom:
-            configMapKeyRef:
-              name: config
-              key: REPORTING_SERVICE_URL
         resources:
           requests:
             cpu: 100m
@@ -403,19 +446,27 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8086
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 8086
-          initialDelaySeconds: 20
           periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 8086
-          initialDelaySeconds: 40
-          periodSeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30
 ---
 apiVersion: v1
 kind: Service
