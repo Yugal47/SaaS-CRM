@@ -18,6 +18,11 @@ spec:
         image: yugal47/saas-crm-user-service:latest
         ports:
           - containerPort: 8081
+        envFrom:
+        - configMapRef:
+            name: config
+        - secretRef:
+            name: secret
         env:
         - name: DB_URL
           valueFrom:
@@ -91,7 +96,20 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: config
-              key: DB_URL
+              key: CRM_SERVICE_DB_URL
+        - name: CRM_SERVICE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: CRM_SERVICE_URL
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: SPRING_PROFILES_ACTIVE
+        envFrom:
+        - secretRef:
+            name: secret
         resources:
           requests:
             cpu: 100m
@@ -385,13 +403,7 @@ spec:
           limits:
             cpu: 500m
             memory: 512Mi
-        startupProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-          periodSeconds: 10
-          timeoutSeconds: 3
-          failureThreshold: 30
+
         readinessProbe:
           httpGet:
             path: /actuator/health
@@ -439,6 +451,11 @@ spec:
         image: yugal47/saas-crm-reporting-service:latest
         ports:
           - containerPort: 8086
+        envFrom:
+          - configMapRef:
+              name: config
+          - secretRef:
+              name: secret
         resources:
           requests:
             cpu: 100m
