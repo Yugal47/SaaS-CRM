@@ -6,11 +6,11 @@ metadata:
 data:
   SPRING_PROFILES_ACTIVE: 'postgres'
 
-  USER_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/userdb'
-  CRM_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/crmddb'
-  NOTIFICATION_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/notificationdb'
-  AUDIT_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/auditdb'
-  FILE_SERVICE_DB_URL: 'jdbc:postgres://postgres-service:5432/filedb'
+  USER_SERVICE_DB_URL: 'jdbc:postgresql://postgres-service:5432/userdb'
+  CRM_SERVICE_DB_URL: 'jdbc:postgresql://postgres-service:5432/crmdb'
+  NOTIFICATION_SERVICE_DB_URL: 'jdbc:postgresql://postgres-service:5432/notificationdb'
+  AUDIT_SERVICE_DB_URL: 'jdbc:postgresql://postgres-service:5432/auditdb'
+  FILE_SERVICE_DB_URL: 'jdbc:postgresql://postgres-service:5432/filedb'
 
   USER_SERVICE_URL: 'http://user-service:8081'
   CRM_SERVICE_URL: 'http://crm-service:8082'
