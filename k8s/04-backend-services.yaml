@@ -1,86 +1,73 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: audit-service
   namespace: crm
-  labels:
-    app: audit-service
+  name: user-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: audit-service
+      app: user-service
   template:
     metadata:
       labels:
-        app: audit-service
+        app: user-service
     spec:
       containers:
-        - name: audit-service
-          image: yugal47/saas-crm-audit-service:latest # e.g. <account>.dkr.ecr.<region>.amazonaws.com/audit-service:latest
-          ports:
-            - containerPort: 8085
-          envFrom:
-            - configMapRef:
-                name: config
-            - secretRef:
-                name: secrets
-          env:
-            - name: DB_URL
-              valueFrom:
-                configMapKeyRef:
-                    name: config
-                    key: AUDIT_SERVICE_DB_URL
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          startupProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8085
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8085
-            timeoutSeconds: 3
-            failureThreshold: 3
-            #initialDelaySeconds: 20
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8085
-            #initialDelaySeconds: 40
-            periodSeconds: 15
-            timeoutSeconds: 3
-            failureThreshold: 3
+      - name: user-service
+        image: yugal47/saas-crm-user-service:latest
+        ports:
+          - containerPort: 8081
+        env:
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: USER_SERVICE_DB_URL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+#        startupProbe:
+#          httpGet:
+#            path: /actuator/health
+#            port: 8081
+#          periodSeconds: 5
+#          failureThreshold: 12
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8081
+          initialDelaySeconds: 40
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: audit-service
   namespace: crm
+  name: user-service
 spec:
   selector:
-    app: audit-service
+    app: user-service
   ports:
-    - port: 8085
-      targetPort: 8085
+  - port: 8081
+    targetPort: 8081
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crm-service
   namespace: crm
-  labels:
-    app: crm-service
+  name: crm-service
 spec:
   replicas: 1
   selector:
@@ -92,63 +79,167 @@ spec:
         app: crm-service
     spec:
       containers:
-        - name: crm-service
-          image: yugal47/saas-crm-crm-service:latest # e.g. <account>.dkr.ecr.<region>.amazonaws.com/crm-service:latest
-          ports:
-            - containerPort: 8082
-          envFrom:
-            - configMapRef:
-                name: config
-            - secretRef:
-                name: secrets
-          env:
-            - name: DB_URL
-              valueFrom:
-                configMapKeyRef:
-                    name: config
-                    key: CRM_SERVICE_DB_URL
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          startupProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8082
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
+      - name: crm-service
+        image: yugal47/saas-crm-crm-service:latest
+        ports:
+          - containerPort: 8082
+        env:
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: CRM_SERVICE_DB_URL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 40
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: crm-service
   namespace: crm
+  name: crm-service
 spec:
   selector:
     app: crm-service
   ports:
-    - port: 8082
-      targetPort: 8082
+  - port: 8082
+    targetPort: 8082
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: crm
+  name: audit-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audit-service
+  template:
+    metadata:
+      labels:
+        app: audit-service
+    spec:
+      containers:
+      - name: audit-service
+        image: yugal47/saas-crm-audit-service:latest
+        ports:
+          - containerPort: 8085
+        env:
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: AUDIT_SERVICE_DB_URL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
 
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8085
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8085
+          initialDelaySeconds: 40
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: crm
+  name: audit-service
+spec:
+  selector:
+    app: audit-service
+  ports:
+  - port: 8085
+    targetPort: 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: crm
+  name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+      - name: notification-service
+        image: yugal47/saas-crm-notification-service:latest
+        ports:
+          - containerPort: 8083
+        env:
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: NOTIFICATION_SERVICE_DB_URL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8083
+          initialDelaySeconds: 40
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: crm
+  name: notification-service
+spec:
+  selector:
+    app: notification-service
+  ports:
+  - port: 8083
+    targetPort: 8083
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -163,14 +254,9 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: file-service
   namespace: crm
-  labels:
-    app: file-service
+  name: file-service
 spec:
-  # Stays at 1 replica: it writes uploads to a ReadWriteOnce volume, so a
-  # second pod couldn't reliably see the same files. Swap FileStorageService
-  # for an S3 client to remove this constraint and scale like the others.
   replicas: 1
   selector:
     matchLabels:
@@ -181,52 +267,39 @@ spec:
         app: file-service
     spec:
       containers:
-        - name: file-service
-          image: yugal47/saas-crm-file-service:latest
-          ports:
-            - containerPort: 8084
-#          envFrom:
-#            - configMapRef:
-#                name: config
-#            - secretRef:
-#                name: secrets
-          env:
-            - name: DB_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: config
-                  key: FILE_SERVICE_DB_URL
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          startupProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8084
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8084
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8084
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          volumeMounts:
-            - name: file-storage
-              mountPath: /data/files
+      - name: file-service
+        image: yugal47/saas-crm-file-service:latest
+        ports:
+          - containerPort: 8084
+        env:
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: FILE_SERVICE_DB_URL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8084
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8084
+          initialDelaySeconds: 40
+          periodSeconds: 15
+        volumeMounts:
+          - name: file-storage
+            mountPath: /data/files
       volumes:
         - name: file-storage
           persistentVolumeClaim:
@@ -235,173 +308,20 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: file-service
   namespace: crm
+  name: file-service
 spec:
   selector:
     app: file-service
   ports:
-    - port: 8084
-      targetPort: 8084
+  - port: 8084
+    targetPort: 8084
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notification-service
   namespace: crm
-  labels:
-    app: notification-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: notification-service
-  template:
-    metadata:
-      labels:
-        app: notification-service
-    spec:
-      containers:
-        - name: notification-service
-          image: yugal47/saas-crm-notification-service:latest # e.g. <account>.dkr.ecr.<region>.amazonaws.com/notification-service:latest
-          ports:
-            - containerPort: 8083
-          envFrom:
-            - configMapRef:
-                name: config
-            - secretRef:
-                name: secrets
-          env:
-            - name: DB_URL
-              valueFrom:
-                configMapKeyRef:
-                    name: config
-                    key: NOTIFICATION_SERVICE_DB_URL
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          startupProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8083
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8083
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8083
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: notification-service
-  namespace: crm
-spec:
-  selector:
-    app: notification-service
-  ports:
-    - port: 8083
-      targetPort: 8083
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: user-service
-  namespace: crm
-  labels:
-    app: user-service
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: user-service
-  template:
-    metadata:
-      labels:
-        app: user-service
-    spec:
-      containers:
-        - name: user-service
-          image: yugal47/saas-crm-user-service:latest # e.g. <account>.dkr.ecr.<region>.amazonaws.com/user-service:latest
-          ports:
-            - containerPort: 8081
-          envFrom:
-            - configMapRef:
-                name: config
-            - secretRef:
-                name: secrets
-          env:
-            - name: DB_URL
-              valueFrom:
-                configMapKeyRef:
-                    name: config
-                    key: USER_SERVICE_DB_URL
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          startupProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8081
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8081
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8081
-            periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 30
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: user-service
-  namespace: crm
-spec:
-  selector:
-    app: user-service
-  ports:
-    - port: 8081
-      targetPort: 8081
-
----
-
-apiVersion: apps/v1
-kind: Deployment
-metadata:
   name: gateway-service
-  namespace: crm
-  labels:
-    app: gateway-service
 spec:
   replicas: 1
   selector:
@@ -413,55 +333,48 @@ spec:
         app: gateway-service
     spec:
       containers:
-        - name: gateway-service
-          image: yugal47/saas-crm-gateway-service:latest # e.g. <account>.dkr.ecr.<region>.amazonaws.com/gateway-service:latest
-          ports:
-            - containerPort: 8080
-          envFrom:
-            - configMapRef:
-                name: config
-            - secretRef:
-                name: secrets
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 20
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 40
-            periodSeconds: 15
+      - name: gateway-service
+        image: yugal47/saas-crm-gateway-service:latest
+        ports:
+          - containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 40
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: gateway-service
   namespace: crm
+  name: gateway-service
 spec:
   selector:
     app: gateway-service
   ports:
-    - port: 8080
-      targetPort: 8080
+  - port: 8080
+    targetPort: 8080
 ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: reporting-service
   namespace: crm
-  labels:
-    app: reporting-service
+  name: reporting-service
 spec:
   replicas: 1
   selector:
@@ -473,43 +386,45 @@ spec:
         app: reporting-service
     spec:
       containers:
-        - name: reporting-service
-          image: yugal47/saas-crm-reporting-service:latest # e.g. <account>.dkr.ecr.<region>.amazonaws.com/reporting-service:latest
-          ports:
-            - containerPort: 8086
-          envFrom:
-            - configMapRef:
-                name: config
-            - secretRef:
-                name: secrets
-          resources:
-            requests:
-              cpu: 100m
-              memory: 384Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8086
-            initialDelaySeconds: 20
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8086
-            initialDelaySeconds: 40
-            periodSeconds: 15
+      - name: reporting-service
+        image: yugal47/saas-crm-reporting-service:latest
+        ports:
+          - containerPort: 8086
+        env:
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: config
+              key: REPORTING_SERVICE_URL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 384Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8086
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8086
+          initialDelaySeconds: 40
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: reporting-service
   namespace: crm
+  name: reporting-service
 spec:
   selector:
     app: reporting-service
   ports:
-    - port: 8086
-      targetPort: 8086
+  - port: 8086
+    targetPort: 8086
